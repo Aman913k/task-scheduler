@@ -1,6 +1,9 @@
 package main
 
-import "time"
+import (
+	"log"
+	"time"
+)
 
 func startWorker(queue TaskQueue) {
 	for task := range queue {
@@ -12,7 +15,7 @@ func startWorker(queue TaskQueue) {
 		}
 
 		// Simulate task processing
-		time.Sleep(2 * time.Second)
+		time.Sleep(7 * time.Second)
 
 		if err := updateTaskStatus(task.ID, "completed"); err != nil {
 			log.Printf("Failed to update task %d status: %v", task.ID, err)

@@ -14,31 +14,30 @@ func createTaskHandler(c *gin.Context) {
 		Description string `json:"description" binding:"required"`
 	}
 
-	if err := c.shouldBindJSON(&input); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: " + err.Error()})
-		return 
+		return
 	}
 
 	id, err := createTask(input.Description)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create task"})
-		return 
+		return
 	}
 
 	task := Task{
-		ID: id, 
+		ID:          id,
 		Description: input.Description,
-		Status: "pending",
-		CreatedAt: time.Now(), 
+		Status:      "pending",
+		CreatedAt:   time.Now(),
 	}
 
 	// Enqueue task asynchronously
 	go enqueTask(taskQueue, task)
-	
+
 	c.JSON(http.StatusCreated, task)
 
 }
-
 
 // GET /tasks
 func getAllTasksHandler(c *gin.Context) {
@@ -49,7 +48,6 @@ func getAllTasksHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, tasks)
 }
-
 
 // GET /tasks/:id
 func getTaskByIDHandler(c *gin.Context) {
@@ -66,5 +64,5 @@ func getTaskByIDHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, task)  
+	c.JSON(http.StatusOK, task)
 }

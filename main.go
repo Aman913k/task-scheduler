@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,10 +13,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var taskQueue taskQueue
+var taskQueue TaskQueue
 
 func main() {
 	// Initialize DB
+	if err := initDB(); err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	fmt.Println("Database connected successfully")
 
 	taskQueue = make(TaskQueue, 100)
 	go startWorker(taskQueue)
@@ -23,12 +28,12 @@ func main() {
 	r := gin.Default()
 
 	r.POST("/tasks", createTaskHandler)
-	r.GET("/tasks", getAllTaskHandler)
-	r.GET("/tasks/:id", getAllTaskByIDHandler)
+	r.GET("/tasks", getAllTasksHandler)
+	r.GET("/tasks/:id", getTaskByIDHandler)
 
 	// Start server
 	srv := &http.Server{
-		Addr: ":8080",
+		Addr:    ":8080",
 		Handler: r,
 	}
 
@@ -37,12 +42,12 @@ func main() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server failed: %v", err)
 		}
-	}() 
+	}()
 
 	// Graceful shotdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit  // blocks until an OS signal arrives, then continues for shutdown.
+	<-quit // blocks until an OS signal arrives, then continues for shutdown.
 	log.Println("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
